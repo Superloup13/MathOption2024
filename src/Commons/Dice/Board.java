@@ -3,7 +3,6 @@ package Commons.Dice;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -22,10 +21,20 @@ public class Board {
 
         Dice die = new Die(new double[]{0.5, 0.25, 0.125, 0.0625, 0.03125, 0.03125});
         //Dice die = new Die(6);
-        DiceBag bag = new DiceBag(die,256);
+        DiceBag bag = new DiceBag(die,32);
+        //clear the files in the folder
+        File folder = new File(path);
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (file.getName().endsWith(".csv")) {
+                    f.delete();
+                }
+            }
+        }
         //current time
         long startTime = System.currentTimeMillis();
-        executeComputation(bag, 10000, 1000, 250, 10, file, new int[]{250, 650});
+        executeComputation(bag, 1000, 10000, 250, 10, file, new int[]{0, 200});
         //end time
         long endTime = System.currentTimeMillis();
         //result en minutes:second:millisecond form
@@ -57,11 +66,11 @@ public class Board {
             String content = countedString(simulationResults, ranges[0], ranges[1]);
             File file = new File(path + "intermediary_" + files.size() + extension);
             files.add(file);
-            writeResultsToFile(file, content);
+            writeToFile(file, content);
         }
 
         Map<Integer, Long> counted = regroupIntermediaries(files);
-        writeResultsToFile(outputFile, writeValues(ranges[0], ranges[1], counted));
+        writeToFile(outputFile, addMedianAndAvg(writeValues(ranges[0], ranges[1], counted), counted));
     }
 
     public static String countedString(ConcurrentHashMap<String, int[]> simulationResults, int rangeLow, int rangeHigh) {
@@ -86,7 +95,31 @@ public class Board {
         return sb.toString();
     }
 
-    public static void writeResultsToFile(File file, String content) {
+    public static String addMedianAndAvg(String csv, Map<Integer, Long> counted) {
+        // find the total number of occurences
+        long totalOccurences = totalOccurences = counted.values().stream().mapToLong(Long::longValue).sum();
+        // find the average
+        long average = counted.entrySet().stream().mapToLong(entry -> entry.getKey() * entry.getValue()).sum() / totalOccurences;
+        // find the median
+        long median = 0;
+        long halfOccurence = totalOccurences / 2;
+        long currentSum = 0;
+        ArrayList<Integer> keys = new ArrayList<>(counted.keySet());
+        while (median == 0) {
+            for (int i = 0; i < keys.size(); i++) {
+                currentSum += counted.get(keys.get(i));
+                if (currentSum >= halfOccurence) {
+                    // when the median is found, break the loop
+                    // account for the initial offset of the list by getting the smallest key
+                    median = keys.get(0) + i;
+                    break;
+                }
+            }
+        }
+        return csv.substring(0, csv.indexOf("\n") + 1) + "Average" + separator + average + "\nMedian" + separator + median + "\n" + csv.substring(csv.indexOf("\n") + 1);
+    }
+
+    public static void writeToFile(File file, String content) {
         try {
             FileWriter fileWriter = new FileWriter(file);
             fileWriter.write(content);
