@@ -50,20 +50,30 @@ public class Die implements Dice {
      * Bounds : [1, nbFaces[
      * @return the result of the dice roll
      */
-    public int roll(){
-        // return a random between 0 (inclusive) and 1 (exclusive) ([0,1[)
+    public int roll() {
         double random = ThreadLocalRandom.current().nextDouble();
-        // example dice probabilities: 0.16, 0.16, 0.16, 0.16, 0.16, 0.16
-        // [0, 0.16[ , [0.16, 0.32[ , [0.32, 0.48[ , [0.48, 0.64[ , [0.64, 0.80[ , [0.80, 1.0[
-        // if random is 0.5, then the result is 4
 
-        // get the result of the dice roll from the cumulative probabilities
-        for (int i = 0; i < this.nbFaces; i++) {
-            if (random < this.cumulativeProbabilityFaces[i]) {
-                return i+1;
+        int left = 0;
+        int right = this.nbFaces - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+
+            if (random < this.cumulativeProbabilityFaces[mid]) {
+                if (mid == 0 || random >= this.cumulativeProbabilityFaces[mid - 1]) {
+                    return mid + 1;
+                }
+                right = mid - 1;
+            } else {
+                left = mid + 1;
             }
         }
-        // if error, return -1
+
         return -1;
+    }
+
+    @Override
+    public int getSides() {
+        return this.nbFaces;
     }
 }
