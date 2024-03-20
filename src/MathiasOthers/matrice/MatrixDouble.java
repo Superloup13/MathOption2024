@@ -1,7 +1,5 @@
 package MathiasOthers.matrice;
 
-import java.math.BigDecimal;
-
 public class MatrixDouble {
     private double[][] matrice;
     private int rows;
