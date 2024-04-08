@@ -19,9 +19,14 @@ public class Board {
     public static void main(String[] args) {
         File file = new File(path + "output" + extension);
 
-        Dice die = new Die(new double[]{0.5, 0.25, 0.125, 0.0625, 0.03125, 0.03125});
-        //Dice die = new Die(6);
-        DiceBag bag = new DiceBag(die,32);
+        // Configure this !!
+        // example :
+        // DiceBag bag = new DiceBag(new Die(6), 2) // 2 dice with 6 faces
+        // int[] ranges = {2, 12} // the range of the results
+        // ====
+        DiceBag bag = new DiceBag(new Die(new double[]{0.400,0.05,0.05,0.05,0.05,0.400}), 100);
+        int[] ranges = {100, 600};
+        // ====
         //clear the files in the folder
         File folder = new File(path);
         File[] files = folder.listFiles();
@@ -34,7 +39,7 @@ public class Board {
         }
         //current time
         long startTime = System.currentTimeMillis();
-        executeComputation(bag, 1000, 10000, 250, 10, file, new int[]{0, 200});
+        executeComputation(bag, 10000, 10000, 1000, 10, file, ranges);
         //end time
         long endTime = System.currentTimeMillis();
         //result en minutes:second:millisecond form
@@ -73,6 +78,13 @@ public class Board {
         writeToFile(outputFile, addMedianAndAvg(writeValues(ranges[0], ranges[1], counted), counted));
     }
 
+    /**
+     * This method takes a ConcurrentHashMap of simulation results and returns a CSV string of the results
+     * @param simulationResults the ConcurrentHashMap of simulation results
+     * @param rangeLow the lowest number to be included in the CSV
+     * @param rangeHigh the highest number to be included in the CSV
+     * @return a CSV string of the results
+     */
     public static String countedString(ConcurrentHashMap<String, int[]> simulationResults, int rangeLow, int rangeHigh) {
         HashMap<Integer, Long> counted = new HashMap<>();
         for (int i = rangeLow; i <= rangeHigh; i++) {
